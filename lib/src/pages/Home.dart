@@ -185,21 +185,34 @@ class _HomeState extends State<Home> {
                 ),
               ),
             ),
-            Container(
-                width: size.width * 1,
-                height: size.height * 0.4,
-                color: Color(0xffe6ccef),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: getImage(),
-                      ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                  width: size.width * 1,
+                  height: size.height * 0.4,
+                  decoration: BoxDecoration(
+                    color: Color(0xffffffff),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.grey.withOpacity(0.5),
+                          spreadRadius: 5,
+                          blurRadius: 7,
+                          offset: Offset(0, 3))
                     ],
                   ),
-                ))
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: getImage(),
+                        ),
+                      ],
+                    ),
+                  )),
+            )
           ],
         ));
   }

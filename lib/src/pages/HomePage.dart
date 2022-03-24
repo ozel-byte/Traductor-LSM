@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:redsocial/src/pages/Home.dart';
+import 'package:redsocial/src/pages/PageBlue.dart';
+import 'package:redsocial/src/pages/PageSelec.dart';
 import 'package:redsocial/src/pages/SplashScreeen.dart';
 
 class HomePage extends StatelessWidget {
@@ -7,9 +9,15 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Material App',
-        home: SplashScreen());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Material App',
+      initialRoute: "/",
+      routes: {
+        '/': (BuildContext context) => PageSelec(),
+        'lenguaje': (BuildContext context) => Home(),
+        'guante': (BuildContext context) => PageBlue()
+      },
+    );
   }
 }
