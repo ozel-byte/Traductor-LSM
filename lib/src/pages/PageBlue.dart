@@ -104,26 +104,32 @@ class _PageBlueState extends State<PageBlue> {
       ),
       body: Column(
         children: [
-          Switch(
-              value: _bluetoothState.isEnabled,
-              onChanged: (bool value) {
-                future() async {
-                  if (value) {
-                    await FlutterBluetoothSerial.instance.requestEnable();
-                  } else {
-                    await FlutterBluetoothSerial.instance.requestDisable();
-                  }
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Text("Encender Bluetooth"),
+              Switch(
+                  value: _bluetoothState.isEnabled,
+                  onChanged: (bool value) {
+                    future() async {
+                      if (value) {
+                        await FlutterBluetoothSerial.instance.requestEnable();
+                      } else {
+                        await FlutterBluetoothSerial.instance.requestDisable();
+                      }
 
-                  await getPairedDevices();
-                  _isButtonUnavaible = false;
+                      await getPairedDevices();
+                      _isButtonUnavaible = false;
 
-                  if (_connected) {
-                    _disconnec();
-                  }
-                }
+                      if (_connected) {
+                        _disconnec();
+                      }
+                    }
 
-                future().then((_) => {setState(() {})});
-              }),
+                    future().then((_) => {setState(() {})});
+                  }),
+            ],
+          ),
           DropdownButton(
               items: _getDeviceItems(),
               value: _deviceList.isNotEmpty ? _device : null,
