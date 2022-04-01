@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
@@ -98,61 +99,129 @@ class _PageBlueState extends State<PageBlue> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Guante"),
-      ),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text("Encender Bluetooth"),
-              Switch(
-                  value: _bluetoothState.isEnabled,
-                  onChanged: (bool value) {
-                    future() async {
-                      if (value) {
-                        await FlutterBluetoothSerial.instance.requestEnable();
-                      } else {
-                        await FlutterBluetoothSerial.instance.requestDisable();
-                      }
-
-                      await getPairedDevices();
-                      _isButtonUnavaible = false;
-
-                      if (_connected) {
-                        _disconnec();
-                      }
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          centerTitle: true,
+          elevation: 0.0,
+          leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(
+                Icons.arrow_back,
+                color: Colors.black,
+              )),
+          title: Text(
+            "Encender bluetooth",
+            style: TextStyle(color: Colors.black),
+          ),
+          actions: [
+            Switch(
+                activeColor: Colors.blue,
+                value: _bluetoothState.isEnabled,
+                onChanged: (bool value) {
+                  future() async {
+                    if (value) {
+                      await FlutterBluetoothSerial.instance.requestEnable();
+                    } else {
+                      await FlutterBluetoothSerial.instance.requestDisable();
                     }
 
-                    future().then((_) => {setState(() {})});
-                  }),
-            ],
-          ),
-          DropdownButton(
-              items: _getDeviceItems(),
-              value: _deviceList.isNotEmpty ? _device : null,
-              onChanged: (value) {
-                _device = value as BluetoothDevice;
-                setState(() {});
-              }),
-          TextButton(
-              onPressed: _isButtonUnavaible
-                  ? null
-                  : _connected
-                      ? _disconnec
-                      : _connect,
-              child: Text(_connected ? 'Disconnect' : 'Connect')),
-          TextButton(
-              onPressed: _connected ? _sendOnMessageToBluetooth : null,
-              child: Text("ON")),
-          TextButton(
-              onPressed: _connected ? _sendOffMessageToBluetooth : null,
-              child: Text("Off"))
-        ],
-      ),
-    );
+                    await getPairedDevices();
+                    _isButtonUnavaible = false;
+
+                    if (_connected) {
+                      _disconnec();
+                    }
+                  }
+
+                  future().then((_) => {setState(() {})});
+                }),
+          ],
+        ),
+        body: Column(
+          children: [
+            Container(
+                width: size.width * 1,
+                height: size.height * 0.08,
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "Lista de dispositivos",
+                            style: TextStyle(
+                                fontWeight: FontWeight.w300, fontSize: 30),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )),
+            Divider(),
+            Container(
+              width: size.width * 1,
+              height: size.height * 0.4,
+              child: listDeviceActive(),
+            ),
+            Divider(),
+            Container(
+              width: size.width * 1,
+              height: size.height * 0.35,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Mandar señal",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w300, fontSize: 30)),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Icon(Icons.account_tree_outlined)
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      TextButton(
+                          style: ButtonStyle(
+                              padding: MaterialStateProperty.all(
+                                  EdgeInsets.symmetric(horizontal: 50)),
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.blue[200])),
+                          onPressed: () {},
+                          child: Text(
+                            "On",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          )),
+                      TextButton(
+                          style: ButtonStyle(
+                              padding: MaterialStateProperty.all(
+                                  EdgeInsets.symmetric(horizontal: 50)),
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.red[200])),
+                          onPressed: () {},
+                          child: Text(
+                            "Off",
+                            style: TextStyle(
+                                color: Colors.red, fontWeight: FontWeight.bold),
+                          ))
+                    ],
+                  )
+                ],
+              ),
+            )
+          ],
+        ));
   }
 
   List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
@@ -200,6 +269,25 @@ class _PageBlueState extends State<PageBlue> {
     }
   }
 
+  Widget listDeviceActive() {
+    if (_deviceList.isEmpty) {
+      return Center(
+        child: Text("None"),
+      );
+    } else {
+      return ListView.builder(
+        itemCount: _deviceList.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(_deviceList[index].name!),
+            subtitle: Text(_deviceList[index].address),
+            trailing: TextButton(onPressed: () {}, child: Text("Connect")),
+          );
+        },
+      );
+    }
+  }
+
   void _disconnec() async {
     await connection.close();
 
@@ -226,3 +314,33 @@ class _PageBlueState extends State<PageBlue> {
     });
   }
 }
+// DropdownButton(
+//                   items: _getDeviceItems(),
+//                   value: _deviceList.isNotEmpty ? _device : null,
+//                   onChanged: (value) {
+//                     _device = value as BluetoothDevice;
+//                     setState(() {});
+//                   }),
+//               TextButton(
+//                   onPressed: _isButtonUnavaible
+//                       ? null
+//                       : _connected
+//                           ? _disconnec
+//                           : _connect,
+//                   child: Text(_connected ? 'Disconnect' : 'Connect')),
+//               TextButton(
+//                   style: ButtonStyle(
+//                       padding: MaterialStateProperty.all(
+//                           EdgeInsets.symmetric(horizontal: 100)),
+//                       backgroundColor:
+//                           MaterialStateProperty.all(Colors.blue[300])),
+//                   onPressed: _connected ? _sendOnMessageToBluetooth : null,
+//                   child: Text("ON")),
+//               TextButton(
+//                   style: ButtonStyle(
+//                       padding: MaterialStateProperty.all(
+//                           EdgeInsets.symmetric(horizontal: 100)),
+//                       backgroundColor:
+//                           MaterialStateProperty.all(Colors.red[300])),
+//                   onPressed: _connected ? _sendOffMessageToBluetooth : null,
+//                   child: Text("Off"))
