@@ -14,9 +14,10 @@ class HomePage extends StatelessWidget {
       title: 'Material App',
       initialRoute: "/",
       routes: {
-        '/': (BuildContext context) => PageSelec(),
+        '/': (BuildContext context) => SplashScreen(),
         'lenguaje': (BuildContext context) => Home(),
-        'guante': (BuildContext context) => PageBlue()
+        'guante': (BuildContext context) => PageBlue(),
+        'pageselect': (BuildContext context) => PageSelec()
       },
     );
   }

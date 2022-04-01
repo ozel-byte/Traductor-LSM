@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:text_to_speech/text_to_speech.dart';
 
 class PageBlue extends StatefulWidget {
   const PageBlue({Key? key}) : super(key: key);
@@ -24,12 +27,17 @@ class _PageBlueState extends State<PageBlue> {
   var _deviceState;
   var _device;
   bool _isButtonUnavaible = false;
-
+  String vozText = "";
+  int posicionListActiveConected = 0;
+  bool activeSenal = false;
+  bool activeConnectNone = false;
+  String nombreDispositivoConectado = "";
+  String direcionDispositivoConectado = "";
+  String status = "...";
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
     FlutterBluetoothSerial.instance.state.then((state) {
       setState(() {
         _bluetoothState = state;
@@ -84,17 +92,6 @@ class _PageBlueState extends State<PageBlue> {
 
   bool isDisconnecting = false;
 
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    if (isConnected) {
-      isDisconnecting = true;
-      connection.dispose();
-      connection = null!;
-    }
-    super.dispose();
-  }
-
   bool _connected = false;
 
   @override
@@ -108,6 +105,7 @@ class _PageBlueState extends State<PageBlue> {
           elevation: 0.0,
           leading: IconButton(
               onPressed: () {
+                FlutterBluetoothSerial.instance.requestDisable();
                 Navigator.pop(context);
               },
               icon: Icon(
@@ -168,7 +166,7 @@ class _PageBlueState extends State<PageBlue> {
             Container(
               width: size.width * 1,
               height: size.height * 0.4,
-              child: listDeviceActive(),
+              child: listDeviceActive(size),
             ),
             Divider(),
             Container(
@@ -189,6 +187,31 @@ class _PageBlueState extends State<PageBlue> {
                       Icon(Icons.account_tree_outlined)
                     ],
                   ),
+                  Text(vozText),
+                  TextButton(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all(Colors.green[200])),
+                      onPressed: () {
+                        activeSenal = true;
+                        setState(() {});
+                      },
+                      child: Text(
+                        "Empezar señal con guante",
+                        style: TextStyle(color: Colors.white),
+                      )),
+                  TextButton(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all(Colors.blue[200])),
+                      onPressed: () {
+                        activeSenal = false;
+                        setState(() {});
+                      },
+                      child: Text(
+                        "Finalizar Señal del guante",
+                        style: TextStyle(color: Colors.white),
+                      )),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -198,9 +221,11 @@ class _PageBlueState extends State<PageBlue> {
                                   EdgeInsets.symmetric(horizontal: 50)),
                               backgroundColor:
                                   MaterialStateProperty.all(Colors.blue[200])),
-                          onPressed: () {},
+                          onPressed: () {
+                            reproducirVoz();
+                          },
                           child: Text(
-                            "On",
+                            "reproducir",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           )),
                       TextButton(
@@ -209,9 +234,11 @@ class _PageBlueState extends State<PageBlue> {
                                   EdgeInsets.symmetric(horizontal: 50)),
                               backgroundColor:
                                   MaterialStateProperty.all(Colors.red[200])),
-                          onPressed: () {},
+                          onPressed: () {
+                            ttop();
+                          },
                           child: Text(
-                            "Off",
+                            "pause",
                             style: TextStyle(
                                 color: Colors.red, fontWeight: FontWeight.bold),
                           ))
@@ -239,6 +266,17 @@ class _PageBlueState extends State<PageBlue> {
     return items;
   }
 
+  Future reproducirVoz() async {
+    if (vozText.isNotEmpty) {
+      TextToSpeech tts = new TextToSpeech();
+      tts.setLanguage("es-ES");
+      tts.speak(vozText);
+      vozText = "";
+    }
+  }
+
+  Future ttop() async {}
+
   void _connect() async {
     if (_device == null) {
       print("dispositivo no select");
@@ -253,7 +291,15 @@ class _PageBlueState extends State<PageBlue> {
             _connected = true;
           });
 
-          connection.input!.listen(null).onDone(() {
+          connection.input!.listen((Uint8List data) {
+            print('data : ${ascii.decode(data)}');
+            if (activeSenal) {
+              vozText += ascii.decode(data);
+              print(vozText.trim());
+              print(vozText.length);
+              setState(() {});
+            }
+          }).onDone(() {
             if (isDisconnecting) {
               print("Disconnecting locally!");
             } else {
@@ -269,23 +315,60 @@ class _PageBlueState extends State<PageBlue> {
     }
   }
 
-  Widget listDeviceActive() {
+  Widget listDeviceActive(Size size) {
     if (_deviceList.isEmpty) {
       return Center(
         child: Text("None"),
       );
     } else {
-      return ListView.builder(
-        itemCount: _deviceList.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(_deviceList[index].name!),
-            subtitle: Text(_deviceList[index].address),
-            trailing: TextButton(onPressed: () {}, child: Text("Connect")),
-          );
-        },
-      );
+      return !activeConnectNone
+          ? ListView.builder(
+              itemCount: _deviceList.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(_deviceList[index].name!),
+                  subtitle: Text(_deviceList[index].address),
+                  trailing: TextButton(
+                      onPressed: () {
+                        _device = _deviceList[index];
+                        nombreDispositivoConectado = _deviceList[index].name!;
+                        direcionDispositivoConectado =
+                            _deviceList[index].address;
+                        _isButtonUnavaible
+                            ? null
+                            : _connected
+                                ? _disconnec()
+                                : _connect();
+                        activeConnectNone = true;
+                        setState(() {});
+                      },
+                      child: Text(_connected ? 'Disconnect' : 'Connect')),
+                );
+              },
+            )
+          : Container(
+              width: size.width * 1,
+              height: size.height * 1,
+              child: Center(
+                  child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Conectado",
+                    style: TextStyle(fontWeight: FontWeight.w300, fontSize: 30),
+                  ),
+                  Text(nombreDispositivoConectado),
+                  Text(direcionDispositivoConectado)
+                ],
+              )),
+            );
     }
+  }
+
+  void received() {
+    connection.input.listen((Uint8List data) {
+      print(ascii.decode(data));
+    });
   }
 
   void _disconnec() async {
