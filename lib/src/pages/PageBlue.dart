@@ -294,10 +294,8 @@ class _PageBlueState extends State<PageBlue> {
           connection.input!.listen((Uint8List data) {
             print('data : ${ascii.decode(data)}');
             if (activeSenal) {
-              vozText += ascii.decode(data);
-              print(vozText.trim());
-              print(vozText.length);
-              setState(() {});
+              print(ascii.decode(data));
+              clasificar(ascii.decode(data));
             }
           }).onDone(() {
             if (isDisconnecting) {
@@ -396,6 +394,11 @@ class _PageBlueState extends State<PageBlue> {
       _deviceState = -1;
     });
   }
+}
+
+
+void clasificar(data){
+  
 }
 // DropdownButton(
 //                   items: _getDeviceItems(),
